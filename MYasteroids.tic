@@ -1,4 +1,17 @@
+-- title:   game title
+-- author:  Claudio Pinheiro - claudiosilva@steelchunk.eu
+-- desc:    my version of asteroids game for a 2D development class at uni
+-- site:    steelchunk.eu
+-- license: MIT License (change this to your license of choice)
+-- version: 0.1
+-- script:  lua
 
+--game state control variables
+STATE_START = 0
+STATE_PLAY = 10
+STATE_END = 20
+
+gameState = STATE_START
 
 --variables
 CLScolor=100
