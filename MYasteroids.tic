@@ -1,115 +1,156 @@
--- title:   game title
+-- title:   MY asteroids
 -- author:  Claudio Pinheiro - claudiosilva@steelchunk.eu
 -- desc:    my version of asteroids game for a 2D development class at uni
 -- site:    steelchunk.eu
--- license: MIT License (change this to your license of choice)
+-- license: MIT License
 -- version: 0.1
 -- script:  lua
+--crt
 
---game state control variables
+
+
+-- game state control
 STATE_START = 0
 STATE_PLAY = 10
 STATE_END = 20
 
 gameState = STATE_START
 
---variables
-CLScolor=100
-TRIcolor=15
-
-r=4
-x1=math.random(r,239-r)
-y1=math.random(r,135-r)
-x2=math.random(r,239-r)
-y2=math.random(r,135-r)
-x3=math.random(r,239-r)
-y3=math.random(r,135-r)
-dx1=(-1)^math.random(1,2)
-dy1=(-1)^math.random(1,2)
-dx2=(-1)^math.random(1,2)
-dy2=(-1)^math.random(1,2)
-dx3=(-1)^math.random(1,2)
-dy3=(-1)^math.random(1,2)
-
-function upd()
-	x1=x1+dx1
-	y1=y1+dx1
-	x2=x2+dx2
-	y2=y2+dx2
-	x3=x3+dx3
-	y3=y3+dx3
-
-	if x1<r then
-		x1=r
-		dx1=-dx1
-	elseif x1>239-r then
-		x1=239-r
-		dx1=-dx1
-	end
-	
-	if y1<r then
-		y1=r
-		dy1=-dy1
-	elseif y1>135-r then
-		y1=135-r
-		dy1=-dy1
-	end
-	
-	if x2<r then
-		x2=r
-		dx2=-dx2
-	elseif x2>239-r then
-		x2=239-r
-		dx2=-dx2
-	end
-	
-	if y2<r then
-		y2=r
-		dy2=-dy2
-	elseif y2>135-r then
-		y2=135-r
-		dy2=-dy2
-	end
-	
-		if x3<r then
-		x3=r
-		dx3=-dx3
-	elseif x3>239-r then
-		x3=239-r
-		dx3=-dx3
-	end
-	
-	if y3<r then
-		y3=r
-		dy3=-dy3
-	elseif y3>135-r then
-		y3=135-r
-		dy3=-dy3
-	end
-	
-end
-
-function draw()
-
-	tri(x1,y1,x2,y2,x3,y3,TRIcolor)
-	line(x1,y1,x2,y2,2)
-	line(x3,y3,x2,y2,2)
-	line(x1,y1,x3,y3,2)
-
-	circ(x1,y1,r, 2)
-	circ(x1,y1,r, 1)
-	
-	circ(x2,y2,r, 2)
-	circ(x2,y2,r, 1)
-
-	circ(x3,y3,r, 2)
-	circ(x3,y3,r, 1)
-
-end
+	playerShip = {
+		position = {
+			x = 100,
+			y = 60
+		},
+		rotation = 3,
+		rotationSpeed = 0.09,
+		points = {
+			{x=8,y=0},
+			{x=-8,y=6},
+			{x=-4,y=0},
+			{x=-8,y=-6},
+			{x=8,y=0}
+		}
+	}
 
 function TIC()
---inside this is a "loop"
-	cls(CLScolor) --cls varies from 0 to 15 (colors)
-	upd()
-	draw()
+
+	if STATE_START == gameState then
+		doStartScreen()
+	elseif STATE_PLAY == gameState then
+		doPlayGame()
+	elseif STATE_END == gameState then
+		doEndScreen()
+	end
+	
 end
+
+function doStartScreen()
+
+	cls()
+	print ("MY ASTEROIDS", 80,40)
+	print ("press SPACE to start", 60,60)
+	if keyp(48) then
+		gameState = STATE_PLAY
+	end
+
+end -- doStartScreen()
+
+function doEndScreen()
+
+	cls()
+	print ("GAME OVER", 80,40)
+	print ("press SPACE to start", 60,60)
+	if keyp(48) then
+		gameState = STATE_PLAY
+	end
+
+end -- doEndScreen()
+
+function doPlayGame()
+
+	cls()
+	
+	-- update
+	checkPlayerButtons()
+	
+	-- draw
+	drawVectorShape(playerShip)
+	print(playerShip.rotation, 0,0)
+	
+	if keyp(48) then
+		gameState = STATE_END
+	end
+
+end -- doPlayGame()
+
+function drawVectorShape(shape)
+
+	local firstPoint = true
+	local lastPoint = 0
+	local rotatedPoint = 0
+	for index, point in ipairs(shape.points) do
+	
+		rotatedPoint = rotatePoint(point,shape.rotation)
+	
+		if firstPoint then
+			lastPoint = rotatedPoint
+			firstPoint = false
+		else
+			line(lastPoint.x + shape.position.x,
+			 lastPoint.y + shape.position.y,
+				rotatedPoint.x + shape.position.x,
+				rotatedPoint.y + shape.position.y,
+				8)
+				lastPoint = rotatedPoint
+		end
+	
+	end -- for
+
+end -- drawVectorShape
+
+function rotatePoint(point, rotation)
+
+	local rotatedX =
+		(point.x * math.cos(rotation))
+		- (point.y * math.sin(rotation))
+		
+	local rotatedY =
+		(point.y * math.cos(rotation))
+		+ (point.x * math.sin(rotation))
+		
+	return {x=rotatedX, y=rotatedY}
+
+end -- rotatePoint
+
+function checkPlayerButtons()
+	
+	if btn(2) then -- left
+		playerShip.rotation = playerShip.rotation
+			- playerShip.rotationSpeed
+	end
+	if  btn(3) then -- right
+		playerShip.rotation = playerShip.rotation
+			+ playerShip.rotationSpeed
+	end
+	
+	playerShip.rotation = 
+		keepAngleInRange(playerShip.rotation)
+
+end -- checkPlayerButtons
+
+function keepAngleInRange(angle)
+
+	if angle < 0 then
+		while angle < 0 do
+			angle = angle + (2 * math.pi)
+		end
+	end
+	if angle > (2 * math.pi) then
+		while angle > (2 * math.pi) do
+			angle = angle - (2 * math.pi)
+		end
+	end
+	
+	return angle
+
+end -- keepAngleInRange
